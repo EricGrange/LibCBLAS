@@ -36,6 +36,12 @@ type
 
    TcblasProcedures = record
 
+      openblas_set_num_threads : procedure(num_threads : LongInt); cdecl;
+      openblas_get_num_threads : function : LongInt; cdecl;
+      openblas_get_num_procs : function : LongInt; cdecl;
+      openblas_get_config : function : PAnsiChar; cdecl;
+      openblas_get_corename : function : PAnsiChar; cdecl;
+
       sdsdot : function(n : LongInt; alpha : Single; x : PSingle; incX : LongInt; Y : PSingle; incY : LongInt) : Single; cdecl;
       dsdot : function(n : LongInt; x : PSingle; incX : LongInt; Y : PSingle; incY : LongInt) : Double; cdecl;
       sdot : function(n : LongInt; x : PSingle; incX : LongInt; Y : PSingle; incY : LongInt) : Single; cdecl;
@@ -377,6 +383,12 @@ begin
    vLibraryHandle := LoadLibrary(PWideChar(dllName));
    if vLibraryHandle = 0 then
       RaiseLastOSError;
+
+   cblas.openblas_set_num_threads := GetProcAddress(vLibraryHandle, 'openblas_set_num_threads');
+   cblas.openblas_get_num_threads := GetProcAddress(vLibraryHandle, 'openblas_get_num_threads');
+   cblas.openblas_get_num_procs := GetProcAddress(vLibraryHandle, 'openblas_get_num_procs');
+   cblas.openblas_get_config := GetProcAddress(vLibraryHandle, 'openblas_get_config');
+   cblas.openblas_get_corename := GetProcAddress(vLibraryHandle, 'openblas_get_corename');
 
    cblas.sdsdot      := GetProc('sdsdot');
    cblas.dsdot       := GetProc('dsdot');
