@@ -368,6 +368,8 @@ uses Windows;
 
 var
    vLibraryHandle : THandle;
+   vRefCount : Integer;
+   vLibraryName : String;
 
 // LoadLibCBLAS
 //
@@ -379,7 +381,13 @@ procedure LoadLibCBLAS(const dllName : String);
    end;
 
 begin
-   Assert(vLibraryHandle = 0, 'LibCBLAS already loaded');
+   InterlockedIncrement(vRefCount);
+   if vRefCount > 1 then begin
+      Assert(vLibraryName = dllName, 'LibCBLAS already loaded from a different DLL');
+      Exit;
+   end;
+
+   vLibraryName := dllName;
    vLibraryHandle := LoadLibrary(PWideChar(dllName));
    if vLibraryHandle = 0 then
       RaiseLastOSError;
@@ -539,10 +547,13 @@ end;
 //
 procedure FreeLibCBLAS;
 begin
-   if vLibraryHandle = 0 then Exit;
-   FreeLibrary(vLibraryHandle);
-   vLibraryHandle := 0;
-   FillChar(cblas, SizeOf(cblas), 0);
+   InterlockedDecrement(vRefCount);
+   if vRefCount = 0 then begin
+      if vLibraryHandle = 0 then Exit;
+      FreeLibrary(vLibraryHandle);
+      vLibraryHandle := 0;
+      FillChar(cblas, SizeOf(cblas), 0);
+   end;
 end;
 
 end.
